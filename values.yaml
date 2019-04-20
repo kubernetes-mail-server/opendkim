@@ -1,0 +1,12 @@
+opendkim:
+  relay_nets: "10.0.0.0/8"
+  port: 8891
+
+database:
+  # hostname: "database.mail-server"
+  port: 3306
+  username: "postfix_admin"
+  password: "some_secure_admin_password"
+  # name: "mail_server"
+  #table_dkim_keys: "opendkim_keys"
+  #table_dkim_signing: "opendkim_signing_table"

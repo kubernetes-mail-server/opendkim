@@ -1,0 +1,42 @@
+# Maintainer: Veovis <veovis@kveer.fr>
+pkgname=opendbx
+pkgver=1.4.5
+pkgrel=0
+pkgdesc="OpenDBX - A database abstraction layer"
+url="https://www.linuxnetworks.de/doc/index.php/OpenDBX"
+arch="all"
+license="LGPL-2.1"
+depends=""
+makedepends="readline-dev ncurses-dev mariadb-dev"
+subpackages="$pkgname-doc $pkgname-dev $pkgname-utils"
+source="https://www.linuxnetworks.de/$pkgname/download/$pkgname-$pkgver.tar.gz"
+options="!check"
+
+build() {
+    cd "$builddir"
+    CPPFLAGS="-I/usr/include/mysql/server" ./configure \
+        --prefix=/usr \
+        --sysconfdir=/etc/$pkgname \
+        --disable-test \
+        --with-backends=mysql \
+        || return 1
+
+    make || return 1
+}
+
+package() {
+    cd "$builddir"
+    make DESTDIR="$pkgdir" install || return 1
+    install -d "$pkgdir"/etc/$pkgname
+    install -dm750 -g mail "$pkgdir"/var/db/dkim
+}
+
+utils() {
+    pkgdesc="$pkgdesc (utility applications)"
+    depends="$pkgname"
+    install -d "$subpkgdir"/usr/bin
+    mv "$pkgdir"/usr/bin "$subpkgdir"/usr
+    mv "$pkgdir"/etc "$subpkgdir"
+}
+
+# end this file with an empty line
