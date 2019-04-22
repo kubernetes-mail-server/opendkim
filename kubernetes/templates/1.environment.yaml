@@ -5,11 +5,6 @@ metadata:
   namespace: {{ .Values.namespace }}
 data:
   ENTRYPOINT_DEBUG: ""
-  DATABASE_HOSTNAME: {{ quote (coalesce .Values.database.hostname (print "database." .Values.namespace)) }}
-  DATABASE_PORT: "{{ .Values.database.port }}"
-  DATABASE_USERNAME: "{{ .Values.database.username }}"
-  DATABASE_PASSWORD: "{{ .Values.database.password }}"
-  DATABASE_NAME: {{ quote (coalesce .Values.database.name .Values.namespace | replace "-" "_") }}
   DATABASE_TABLE_KEYS: {{ quote (coalesce .Values.database.table_dkim_keys (print (.Values.name | replace "-" "_") "_keys")) }}
   DATABASE_TABLE_SIGNING: {{ quote (coalesce .Values.database.table_dkim_signing (print (.Values.name | replace "-" "_") "_signing_table")) }}
   RELAY_NETS: "{{ .Values.opendkim.relay_nets }}"
