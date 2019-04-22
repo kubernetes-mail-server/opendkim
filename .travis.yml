@@ -1,0 +1,86 @@
+sudo: required
+
+services:
+  - docker
+
+language: generic
+
+env:
+  global:
+    - NAME=opendkim
+    - IMAGE=kubernetesmailserver/${NAME}
+    - NAMESPACE=mail-server
+    - REPLICAS=1
+    - CACHE_FOLDER=$HOME/docker-images
+    - CACHE_FILE=${CACHE_FOLDER}/${NAME}-${TRAVIS_COMMIT}.tgz
+    - secure: "JQoYkBkeq8hR3Kw/kDX9vAaHQ6sGGmR+oP1AMxIqsaf7aUlcFQzhOrvyrelBrqVQZAnH4rrgxJ9LtLko6aCjJJjm7r6SyNaNLPGjkpFncbg3Szjm0c7jF1UAwHC/hFyiefvkjOy4/B2SQfJPwHMsQaWuTHk1x05IYL4M401ixKAQlSbQ+FrGqhY02+QQ/6Fsle0XxHmZutmaLZYD9abRMBbLoFRjpJNphou09waiyr80y2X3dAhiUDgHSU/tCzzJo8U6Uc8HoGvXNXf9ggMeOdAHLNWaN1bt2bYajbYQ6SCOrrp9Rqde6RLJK63VBrIa7UZ5OkMEAU9ukeIIRiyKRiN06aJtq0ZpXCSl8BEsEO0YtQuu5p8lGfVpeCIgze/cD6w1whG2/k2Bdt66tCoWHYhyVAPfXhZCdvULEvFnEifCS8/+34PqHANyFmaDasBUj82Q+7r1MpnSP5FoDZds3UWwDiJ+4cUko+JzL1QQBwDrpDYBeKDPrZpvyOAbT4M43hvoWa17XMu5zBOHE1UqIzRmw5185GbWKj2dcs7WWFaqmHnFlyhN4jZFiOCObkKJU5eFB+AVflINtvj5V4jnZOYUbiGWfn4BW80vF+u8HE/e4mGpxYd670rmEJhs7XoIWQvdz0yjHNoELM/XF2EyamVcBfw6+L0eBMmVBY05zH8="
+    - secure: "eXGTMHTXDeOK9Lm1qwBfaiUTHnNPUxDF9ViFJJOINFXU8otuCNI8LnqzIwgZDxPgVD0HKEBSCaR6OyT0vAj1hIVmTQqyV7n6ED8IeYj+bMMaosGkYVukaiif7CS6o/auR/xchTJUOeQRFbTIpk47mkjAoiuwpctlFJbvMfXS0RCDeb4QpIXha3E8FNAUFT+9MyqohG6MbqctBJKVquTsHTvy2d6eaXjV0P9WhQIqW48cl5qc4/KMIyNkp0wzxFnMKNaICXVWt6CJ6IbTqBTrmEXDPkdeibsd3isGNxwBcFo9MC+kzpxkvbEo8ToDq1l3u7frv9lG5xpIW+zddorF7PMQ6/phHmoTUcrwv0+SOXW/TxyliQI62Gkas7sF7A1aGvpo0tRuY8OFsfYLt1OeQ0hCDNVWcU0ifDh3oR0XhQAPvAO8u5TSLQJUF8pymAxXXY0Sbo9sI/E5uCApbAyBEgd0THHIVk6ML45aZK/yN+707P8ZT7gHBLLTa8KDcoNfjjyQt0mXg8cNb5XbFOuIQFP8DN8hu4tb1VLrknKLwXfGgiLqsvLl0XFvZErkq4aEE7I9ZQIMpkBeVFs5eD2dWxGUUcRNoVnARRo5JQu/s/41kZFNO/QMGGr2gwND6aJc+4HdNuWy9JMykE0D9F5cR6PtbId4x+q9JjCTKV+j7P8="
+
+before_install:
+  - openssl aes-256-cbc -K $encrypted_2e7988a4da91_key -iv $encrypted_2e7988a4da91_iv -in kubeconfig.enc -out kubeconfig -d
+  - KUBE_LATEST_VERSION="v1.14.1"
+  - HELM_LATEST_VERSION="v2.13.1"
+  - HELM=https://storage.googleapis.com/kubernetes-helm/helm-${HELM_LATEST_VERSION}-linux-amd64.tar.gz
+  - KUBECTL=https://storage.googleapis.com/kubernetes-release/release/${KUBE_LATEST_VERSION}/bin/linux/amd64/kubectl
+  - curl -L ${KUBECTL} -o $PWD/kubectl
+  - curl -L ${HELM} | tar xzO linux-amd64/helm > $PWD/helm
+  - chmod +x $PWD/helm $PWD/kubectl
+  - export -p PATH=$PATH:$PWD
+
+jobs:
+  include:
+    - stage: build
+      name: Build docker image
+      script:
+        - docker build -t ${IMAGE} ${PWD}
+        - mkdir -p ${CACHE_FOLDER}
+        - docker save ${IMAGE} | gzip -c > ${CACHE_FILE}
+    - stage: push
+      name: Tag and push the master build as latest
+      if: branch = master AND type != pull_request
+      script:
+        - ls -la ${CACHE_FOLDER}
+        - if [[ -f ${CACHE_FILE} ]]; then docker load -i ${CACHE_FILE}; fi
+        - docker images
+        - docker tag ${IMAGE} ${IMAGE}:latest
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+        - docker push ${IMAGE}:latest
+        - docker tag ${IMAGE}:latest ${IMAGE}:${TRAVIS_BUILD_ID}
+        - docker push ${IMAGE}:${TRAVIS_BUILD_ID}
+    - stage: push
+      name: Tag and push the version build using github tag name
+      if: branch != master AND type != pull_request
+      script:
+        - ls -la ${CACHE_FOLDER}
+        - if [[ -f ${CACHE_FILE} ]]; then docker load -i ${CACHE_FILE}; fi
+        - docker images
+        - docker tag ${IMAGE} ${IMAGE}:${TRAVIS_TAG}
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+        - docker push ${IMAGE}:${TRAVIS_TAG}
+        - docker tag ${IMAGE}:latest ${IMAGE}:${TRAVIS_BUILD_ID}
+        - docker push ${IMAGE}:${TRAVIS_BUILD_ID}
+    - stage: deploy
+      name: Deploy the master branch to the kubernetes cluster
+      if: branch = master and type != pull_request
+      script:
+        - export KUBECONFIG=$PWD/kubeconfig
+        - kubectl get pods
+        - kubectl scale --replicas=0 deployment/${NAME} || true
+        - kubectl get deployments
+        - helm template
+            -f $PWD/values.yaml
+            --set name=${NAME}
+            --set namespace=${NAMESPACE}
+            --set repository=${IMAGE}:${TRAVIS_BUILD_ID}
+            $PWD/kubernetes | kubectl apply -f -
+        - kubectl scale --replicas=${REPLICAS} deployment/${NAME}
+        - kubectl get deployments
+    - stage: cleanup
+      name: Remove the docker image from the cache
+      script:
+        - rm -rf ${CACHE_FILE}
+
+cache:
+  bundler: true
+  directories:
+    - ${CACHE_FOLDER}
