@@ -22,6 +22,8 @@ spec:
                 name: {{ .Values.name }}
             - configMapRef:
                 name: database-common
+            - configMapRef:
+                name: database-read
           ports:
             - name: {{ .Values.name }}
               containerPort: {{ .Values.opendkim.port }}
