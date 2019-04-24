@@ -19,7 +19,7 @@ function optional () {
     sed -i "s~{{ $1 }}~$v~g" $2
 }
 
-for file in $(find /etc/opendkim -type f); do
+for file in $(find /etc/opendkim /etc/supervisord.conf -type f); do
   required DATABASE_HOSTNAME ${file}
   required DATABASE_PORT ${file}
   required DATABASE_USERNAME ${file}
