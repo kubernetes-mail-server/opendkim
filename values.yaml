@@ -1,8 +1,0 @@
-opendkim:
-  relay_nets: "10.0.0.0/8"
-  port: 8891
-
-database:
-  help: "uncomment and customise any of these in order to change the queries"
-  #table_dkim_keys: "opendkim_keys"
-  #table_dkim_signing: "opendkim_signing_table"

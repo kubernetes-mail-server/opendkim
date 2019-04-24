@@ -21,12 +21,14 @@ spec:
             - configMapRef:
                 name: {{ .Values.name }}
             - configMapRef:
+                name: services-info
+            - configMapRef:
                 name: database-common
             - configMapRef:
                 name: database-read
           ports:
             - name: {{ .Values.name }}
-              containerPort: {{ .Values.opendkim.port }}
+              containerPort: {{ .Values.port }}
               protocol: TCP
 ---
 
@@ -41,5 +43,5 @@ spec:
     role: {{ .Values.name }}
   ports:
     - name: {{ .Values.name }}
-      port: {{ .Values.opendkim.port }}
-      targetPort: {{ .Values.opendkim.port }}
+      port: {{ .Values.port }}
+      targetPort: {{ .Values.port }}
