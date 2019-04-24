@@ -25,8 +25,7 @@ for file in $(find /etc/opendkim -type f); do
   required DATABASE_USERNAME ${file}
   required DATABASE_PASSWORD ${file}
   required DATABASE_NAME ${file}
-  required DATABASE_TABLE_KEYS ${file}
-  required DATABASE_TABLE_SIGNING ${file}
+
   required OPENDKIM_RELAY_NETS ${file}
   required OPENDKIM_PORT ${file}
   required OPENDKIM_DATABASE_TABLE_KEYS ${file}
