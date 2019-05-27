@@ -20,13 +20,13 @@ spec:
           readinessProbe:
             tcpSocket:
               port: {{ .Values.port }}
-            initialDelaySeconds: 30
-            periodSeconds: 10
+            initialDelaySeconds: 60
+            periodSeconds: 60
           livenessProbe:
             tcpSocket:
               port: {{ .Values.port }}
-            initialDelaySeconds: 30
-            periodSeconds: 10
+            initialDelaySeconds: 60
+            periodSeconds: 60
           envFrom:
             - configMapRef:
                 name: {{ .Values.name }}
