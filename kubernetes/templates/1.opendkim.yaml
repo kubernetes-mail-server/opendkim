@@ -17,6 +17,16 @@ spec:
         - name: {{ .Values.name }}
           image: {{ .Values.repository }}
           imagePullPolicy: Always
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.port }}
+            initialDelaySeconds: 60
+            periodSeconds: 60
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.port }}
+            initialDelaySeconds: 60
+            periodSeconds: 60
           envFrom:
             - configMapRef:
                 name: services-info
