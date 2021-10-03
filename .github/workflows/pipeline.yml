@@ -49,7 +49,7 @@ jobs:
           file: ./Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           push: true
-          tags: ghcr.io/kubernetes-mail-server/${NAME}
+          tags: ghcr.io/kubernetes-mail-server/${{ env.NAME }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
       
