@@ -7,16 +7,37 @@ url="https://www.linuxnetworks.de/doc/index.php/OpenDBX"
 arch="all"
 license="LGPL-2.1"
 depends=""
-makedepends="readline-dev ncurses-dev mariadb-dev"
+makedepends="opendbx-dev readline-dev ncurses-dev mariadb-dev"
 subpackages="$pkgname-doc $pkgname-dev $pkgname-utils"
 source="https://www.linuxnetworks.de/$pkgname/download/$pkgname-$pkgver.tar.gz"
 options="!check"
 
+retry_wget() {
+    local url="$1"
+    local output="$2"
+    local tries=3
+    local count=0
+    until wget -O "$output" "$url"; do
+        count=$((count + 1))
+        if [ "$count" -ge "$tries" ]; then
+            echo "wget failed after $tries attempts."
+            return 1
+        fi
+        echo "wget failed... retrying ($count/$tries) in 2s"
+        sleep 2
+    done
+}
+
 build() {
     cd "$builddir"
-    CPPFLAGS="-I/usr/include/mysql/server" ./configure \
+    retry_wget 'https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD' config.guess
+    retry_wget 'https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD' config.sub
+    export CXXFLAGS="$CXXFLAGS -std=c++14 -Wno-deprecated"
+    export CPPFLAGS="-I/usr/include/mysql/server"
+    ./configure \
         --prefix=/usr \
         --sysconfdir=/etc/$pkgname \
+        --with-odbx \
         --disable-test \
         --with-backends=mysql \
         || return 1
