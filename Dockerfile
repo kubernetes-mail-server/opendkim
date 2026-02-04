@@ -34,9 +34,15 @@ RUN cd /tmp \
     && mv /tmp/community/opendkim /app/opendkim
 
 RUN cd /app/opendkim/ \
+    && sed -i 's/^makedepends="/makedepends="opendbx-dev /' APKBUILD \
+    && sed -i 's|--sysconfdir=/etc/\$pkgname|--sysconfdir=/etc/$pkgname --with-odbx|' APKBUILD \
     && apkgrel -a . \
     && sudo -u build abuild checksum && sudo -u build abuild -r \
-    && apk add --no-cache opendkim supervisor rsyslog tzdata
+    && apk add --no-cache opendkim opendbx-backend-mysql supervisor rsyslog tzdata \
+    && echo "=== OpenDKIM build verification ===" \
+    && opendkim -V \
+    && echo "=== Checking libopendbx linkage ===" \
+    && ldd $(which opendkim) | grep -i opendbx || ldd /usr/lib/libopendkim.so* | grep -i opendbx || echo "WARNING: No opendbx linkage found"
 
 RUN cd /app/opendkim/ \
     && apk del .build \
