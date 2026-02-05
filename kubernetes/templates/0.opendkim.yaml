@@ -33,9 +33,6 @@ spec:
               port: {{ .Values.port }}
             initialDelaySeconds: 60
             periodSeconds: 60
-          env:
-            - name: "DISABLE_SSL"
-              value: "1"
           envFrom:
             - configMapRef:
                 name: services-info
