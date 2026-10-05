@@ -54,6 +54,12 @@ COPY config /etc/opendkim
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+# The mail database (mariadb 10.5) has no TLS. MariaDB Connector/C 3.4, which current Alpine ships,
+# requires TLS by default and refuses with "SSL is required, but the server does not support it".
+# OpenDBX reads no my.cnf, so the connector's own switch is the only way to allow a plain
+# connection. The database is only reachable inside the cluster.
+ENV MARIADB_TLS_DISABLE_PEER_VERIFICATION=1
+
 EXPOSE 8891/tcp
 
 ENTRYPOINT ["/entrypoint.sh"]
